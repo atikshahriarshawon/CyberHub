@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberHub — Cybersecurity Resource Directory</title>
+
+<!-- Bootstrap (used for layout utilities, as required by the project brief) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Fonts: JetBrains Mono for terminal/code accents, Inter for body text -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:        #0A0E17;
+    --surface:   #11172A;
+    --surface-2: #161D33;
+    --border:    #232C45;
+    --text:      #E7ECF6;
+    --text-muted:#7C88A6;
+    --cyan:      #45D9E0;
+    --amber:     #F2A93B;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    margin:0;
+    min-height:100vh;
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- NAVBAR ---------- */
+  .nav-bar{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:14px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:.02em;
+  }
+  .brand .bracket{ color:var(--cyan); }
+  .led{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 8px var(--amber);
+    animation:blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
+
+  .nav-links{ display:flex; gap:24px; align-items:center; }
+  .nav-links a{
+    font-size:14px;
+    color:var(--text-muted);
+    font-weight:500;
+    transition:color .15s;
+  }
+  .nav-links a:hover{ color:var(--text); }
+  .nav-links a.disabled{
+    cursor:default;
+    position:relative;
+  }
+  .nav-links a.disabled:hover::after{
+    content:"Coming soon";
+    position:absolute;
+    top:130%; left:50%;
+    transform:translateX(-50%);
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+
+  /* ---------- FILTER BAR ---------- */
+  .filter-section{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    padding:16px 28px 18px;
+  }
+  .filter-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .filter-pill{
+    font-family:'JetBrains Mono', monospace;
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    padding:7px 16px;
+    border-radius:999px;
+    font-size:13px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .filter-pill:hover{ border-color:var(--cyan); color:var(--text); }
+  .filter-pill.active{
+    background:var(--cyan);
+    border-color:var(--cyan);
+    color:#04141A;
+    font-weight:600;
+    box-shadow:0 0 16px rgba(69,217,224,.35);
+  }
+
+  /* Terminal status line — reflects whatever filter is active */
+  .terminal-line{
+    margin-top:14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .terminal-line .prompt-user{ color:var(--cyan); }
+  .terminal-line .prompt-tilde{ color:var(--text-muted); }
+  .terminal-line #commandText{ color:var(--text); }
+  .cursor-blink{
+    display:inline-block;
+    color:var(--amber);
+    animation:blink 1s steps(1) infinite;
+  }
+  .result-count{
+    margin-top:4px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  /* ---------- RESOURCE GRID ---------- */
+  .grid-wrap{ padding:28px; max-width:1400px; margin:0 auto; }
+
+  .resource-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:20px;
+  }
+
+  .resource-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    display:flex;
+    flex-direction:column;
+  }
+  .resource-card:hover{
+    transform:translateY(-5px);
+    border-color:var(--cyan);
+    box-shadow:0 10px 28px rgba(0,0,0,.45);
+  }
+  .resource-card img{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    display:block;
+    background:var(--surface-2);
+  }
+  .resource-card .card-body{ padding:14px 16px 16px; }
+  .resource-card .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--amber);
+  }
+  .resource-card h3{
+    font-size:14.5px;
+    font-weight:600;
+    line-height:1.35;
+    margin:6px 0 0;
+    color:var(--text);
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-state{
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:28px 24px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    grid-column:1 / -1;
+  }
+  .empty-state p{ margin:0 0 6px; }
+  .empty-state .live{ color:var(--text); }
+  .empty-state .muted{ color:var(--text-muted); }
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:18px 28px;
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<nav class="nav-bar">
+  <div class="brand">
+    <span class="bracket">[</span> cyberhub <span class="bracket">]</span>
+  </div>
+  <!-- Replace your current <div class="nav-links"> in index.html with this: -->
+<!-- Replace your current <div class="nav-links"> in cyberhub.html with this: -->
+<div class="nav-links">
+  <a href="cyberhub.html">Home</a>
+  <a href="signup.html">Sign Up</a>
+  <a href="contact.html">Contact</a>
+  <a href="about.html">about us</a>
+</div>
+</nav>
+
+<!-- ============ FILTER BAR ============ -->
+<div class="filter-section">
+  <div class="filter-row" id="filterRow">
+    <button class="filter-pill active" data-category="all">All</button>
+    <button class="filter-pill" data-category="network">Network</button>
+    <button class="filter-pill" data-category="securityplus">Security+</button>
+    <button class="filter-pill" data-category="linux">Linux</button>
+    <button class="filter-pill" data-category="python">Python</button>
+    <button class="filter-pill" data-category="trafficanalysis">Traffic Analysis</button>
+    <button class="filter-pill" data-category="programming">Programming</button>
+    <button class="filter-pill" data-category="websecurity">Web Security</button>
+    <button class="filter-pill" data-category="thmrooms">TryHackMe Rooms</button>
+  </div>
+
+  <div class="result-count" id="resultCount"></div>
+</div>
+
+<!-- ============ RESOURCE GRID ============ -->
+<div class="grid-wrap">
+  <div class="resource-grid" id="resourceGrid"><!-- cards injected by JS --></div>
+</div>
+
+<footer>// CyberHub — curated by students, for students</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+/* =========================================================================
+   CYBERHUB — RESOURCE DATABASE
+   ========================================================================= */
+  const RESOURCES = [
+    {
+      title: "CompTIA N10-009 Network+ by Professor Messer",
+      url: "https://www.youtube.com/watch?v=k7IOn3TiUc8&list=PLG49S3nxzAnl_tQe3kvnmeMid0mjF8Le8",
+      category: "network",
+      type: "youtube"
+    },
+    {
+      title: "CompTIA SY0-701 Security+ Training Course by Professor Messer",
+      url: "https://www.youtube.com/watch?v=KiEptGbnEBc&list=PLG49S3nxzAnl4QDVqK-hOnoqcSKEIDDuv",
+      category: "securityplus",
+      type: "youtube"
+    },
+    {
+      title: "CompTIA SY0-601 Security+ Training Course by Professor Messer",
+      url: "https://www.youtube.com/watch?v=1E7pI7PB4KI&list=PL7XJSuT7Dq_UDJgYoQGIW9viwM5hc4C7n",
+      category: "securityplus",
+      type: "youtube"
+    },
+    {
+      title: "Linux Journey: Learn Linux for Free",
+      url: "https://linuxjourney.com/",
+      category: "linux",
+      type: "image",
+      thumbnail: "https://media.licdn.com/dms/image/v2/D4D22AQEKUFoqJQhLxw/feedshare-shrink_1280/B4DZRhyoMFG4A0-/0/1736807450179?e=2147483647&v=beta&t=ahsOPu2BQYDKmNwyFXeMFCDacqI4_Z5WASIQylnli1E"
+    },
+    {
+      title: "Cisco Networking Academy: Operating Systems Basics (Linux)",
+      url: "https://www.netacad.com/courses/operating-systems-basics-linux",
+      category: "linux",
+      type: "image",
+      thumbnail: "https://tse3.mm.bing.net/th/id/OIP.ik8d_AaupCaiEpR-nAabIQHaEO?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "LabEx: Free Hands-on Linux Labs",
+      url: "https://labex.io/free-labs/linux",
+      category: "linux",
+      type: "image",
+      thumbnail: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3JDjV9aqny78uqUkSxatzpTO1otzu--V9aoonp1-_ZrCbztTVFPIDSKCikKIj4CByULCAAZZg3IIbiSS3U3T2GEAr49ucPBxpEuT5gX7lMnbSV-6wC2Z3EizTSfDRihi1vY1oTjQb3Ud8-tqP-JbWoyp8lug4QP0wTL2FWWAKkeKwriw2mFqaMsKG/w1200-h630-p-k-no-nu/Linux%20DevOps.png"
+    },
+
+    /* ---------- PYTHON RESOURCES ---------- */
+    {
+      title: "Codecademy: Learn Python",
+      url: "https://codecademy.com/learn/learn-python",
+      category: "python",
+      type: "image",
+      thumbnail: "https://tse2.mm.bing.net/th/id/OIP.LBZS7U-_t1tWq55q9Gn-uQHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Python Executive & Community Portal",
+      url: "https://www.python.org/",
+      category: "python",
+      type: "image",
+      thumbnail: "https://th.bing.com/th/id/OIP.uvohWof2KekuKJdoBaIixQHaEO?w=270&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3"
+    },
+    {
+      title: "Real Python: Python Tutorials & Guides",
+      url: "https://realpython.com/",
+      category: "python",
+      type: "image",
+      thumbnail: "https://pythongeeks.org/wp-content/uploads/2023/01/python-tutorial-for-beginners%E2%80%93learn-python.webp"
+    },
+    {
+      title: "Talk Python To Me: Developer Podcast",
+      url: "https://talkpython.fm/",
+      category: "python",
+      type: "image",
+      thumbnail: "https://tse4.mm.bing.net/th/id/OIP.cZwuU5Hn-ebPN6zHtcqg3QHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Learn Python the Hard Way",
+      url: "https://learnpythonthehardway.org",
+      category: "python",
+      type: "image",
+      thumbnail: "https://tse3.mm.bing.net/th/id/OIP.xVYNFYKv7g70qTnxusyQpAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "HackerRank: Python Coding Practice",
+      url: "https://www.hackerrank.com/domains/python",
+      category: "python",
+      type: "image",
+      thumbnail: "https://tse3.mm.bing.net/th/id/OIP.5slvJQT78R8pvLHrH926LgAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "LabEx: Free Hands-on Python Labs",
+      url: "https://labex.io/free-labs/python",
+      category: "python",
+      type: "image",
+      thumbnail: "https://tse2.mm.bing.net/th/id/OIP.cYKoqeGvuIWe1etucgo-IAHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Python 101 for Hackers by The Cyber Mentor",
+      url: "https://www.youtube.com/watch?v=egg-GoT5iVk",
+      category: "python",
+      type: "youtube"
+    },
+
+    /* ---------- TRAFFIC ANALYSIS RESOURCES ---------- */
+    {
+      title: "Wireshark Educational Resources & Training",
+      url: "https://www.wireshark.org/#educationalContent",
+      category: "trafficanalysis",
+      type: "image",
+      thumbnail: "https://tse1.mm.bing.net/th/id/OIP.NoM3-KNZyTU-ihqbU0EutgHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Guru99: Wireshark Tutorial for Beginners",
+      url: "https://guru99.com/wireshark-tutorial.html",
+      category: "trafficanalysis",
+      type: "image",
+      thumbnail: "https://tse2.mm.bing.net/th/id/OIP.dhfugwkeRReqY8YdJuDc-QAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Daniel Miessler: A Primer on tcpdump",
+      url: "https://danielmiessler.com/study/tcpdump/",
+      category: "trafficanalysis",
+      type: "image",
+      thumbnail: "https://tse2.mm.bing.net/th/id/OIP.I-E4yj9yReEMfP0pQAa2HwHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "pfSense Documentation: Suricata Package",
+      url: "https://doc.pfsense.org/index.php/Suricata",
+      category: "trafficanalysis",
+      type: "image",
+      thumbnail: "https://tse3.mm.bing.net/th/id/OIP.peBO4nXEBCn_JkzjzyYs3gHaFZ?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Network Traffic Analysis & Packet Inspection Course",
+      url: "https://www.youtube.com/watch?v=NjvR4LmwcMU&list=PLBf0hzazHTGPgyxeEj_9LBHiqjtNEjsgt",
+      category: "trafficanalysis",
+      type: "youtube"
+    },
+    {
+      title: "Suricata IDS/IPS System Tutorial & Setup Guide",
+      url: "https://www.youtube.com/watch?v=S0-vsjhPDN0",
+      category: "trafficanalysis",
+      type: "youtube"
+    },
+
+    /* ---------- PROGRAMMING RESOURCES ---------- */
+    {
+      title: "C Programming For Hackers GitHub Repository",
+      url: "https://github.com/cybity/C-Programming-For-Hackers",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse1.mm.bing.net/th/id/OIP.qAa3U_Ad1N1DZw9KFDpg7gHaEO?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Open Security Training 2 (OST2)",
+      url: "https://ost2.fyi/",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse2.mm.bing.net/th/id/OIP.cs7E3dNK5imQw_1y4qRAZwHaDI?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Learn-C.org: Interactive C Tutorial",
+      url: "https://www.learn-c.org/",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse4.mm.bing.net/th/id/OIP.V577qcbgVCMZuttj9TDCkQHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Go Security Documentation",
+      url: "https://go.dev/doc/security/",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse4.mm.bing.net/th/id/OIP.C9nRyVBarn3cNvyrdgaqXwHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "Black Hat Go GitHub Repository",
+      url: "https://github.com/blackhat-go/bhg",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse3.mm.bing.net/th/id/OIP.y-1CQHqTViA4zDyU7DsszAHaFK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "A Tour of Go",
+      url: "https://go.dev/tour/welcome/1",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse4.mm.bing.net/th/id/OIP.pTgX6D6K1O3ihGZkprzbgQHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+    {
+      title: "MDN Web Docs: JavaScript Guide",
+      url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+      category: "programming",
+      type: "image",
+      thumbnail: "https://tse4.mm.bing.net/th/id/OIP.KsU1Z4aZgh-y_ZlraID3_gHaDH?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+    },
+
+    /* ---------- WEB SECURITY RESOURCES ---------- */
+    {
+      title: "PortSwigger Web Security Academy",
+      url: "https://portswigger.net/web-security",
+      category: "websecurity",
+      type: "image",
+      thumbnail: "portswigger.png"
+    },
+    {
+      title: "OWASP Juice Shop Project",
+      url: "https://owasp.org/www-project-juice-shop/",
+      category: "websecurity",
+      type: "image",
+      thumbnail: "owasp.png"
+    },
+    {
+      title: "OWASP WebGoat Project",
+      url: "https://owasp.org/www-project-webgoat/",
+      category: "websecurity",
+      type: "image",
+      thumbnail: "owasp.png"
+    },
+    {
+      title: "OWASP Top Ten Security Risks",
+      url: "https://owasp.org/www-project-top-ten/",
+      category: "websecurity",
+      type: "image",
+      thumbnail: "owasp.png"
+    },
+    {
+      title: "OWASP ZAP (Zed Attack Proxy)",
+      url: "https://www.zaproxy.org/",
+      category: "websecurity",
+      type: "image",
+      thumbnail: "zap.png"
+    },
+
+    /* ---------- TRY HACK ME ROOMS ---------- */
+    {
+      title: "THM: 1. Welcome",
+      url: "https://tryhackme.com/jr/welcome",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 2. OpenVPN",
+      url: "https://tryhackme.com/room/openvpn",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 3. Getting Started",
+      url: "https://tryhackme.com/room/gettingstarted",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 4. Starting Out in Cyber Sec",
+      url: "https://tryhackme.com/room/startingoutincybersec",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 5. Learning Cyber Security",
+      url: "https://tryhackme.com/room/beginnerpathintro",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 6. Offensive Security Intro",
+      url: "https://tryhackme.com/room/offensivesecurityintro",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 7. Search Skills",
+      url: "https://tryhackme.com/room/searchskills",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 8. Introductory Networking",
+      url: "https://tryhackme.com/room/introtonetworking",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 9. Linux Fundamentals Part 1",
+      url: "https://tryhackme.com/room/linuxfundamentalspart1",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 10. Intro to Researching",
+      url: "https://tryhackme.com/room/introtoresearch",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 11. Google Dorking",
+      url: "https://tryhackme.com/room/googledorking",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 12. OHsint",
+      url: "https://tryhackme.com/room/ohsint",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    },
+    {
+      title: "THM: 13. Shodan.io",
+      url: "https://tryhackme.com/room/shodan",
+      category: "thmrooms",
+      type: "image",
+      thumbnail: "thm.png"
+    }
+  ];
+
+  /* =========================================================================
+     Everything below this line is display logic
+     ========================================================================= */
+
+  const CATEGORY_LABELS = {
+    all: "all",
+    network: "network",
+    securityplus: "security+",
+    linux: "linux",
+    python: "python",
+    trafficanalysis: "traffic-analysis",
+    programming: "programming",
+    websecurity: "web-security",
+    thmrooms: "tryhackme-rooms"
+  };
+
+  // Pull a YouTube video ID out of any common YouTube URL shape.
+  function getYouTubeId(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+      if (u.searchParams.get("v")) return u.searchParams.get("v");
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // A simple inline placeholder used if a resource has no usable thumbnail.
+  const FALLBACK_THUMB =
+    "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="225">
+        <rect width="100%" height="100%" fill="#161D33"/>
+        <text x="50%" y="50%" fill="#7C88A6" font-family="monospace"
+              font-size="14" text-anchor="middle" dy=".3em">no preview</text>
+      </svg>`);
+
+  function getThumbnail(resource) {
+    if (resource.type === "youtube") {
+      const id = getYouTubeId(resource.url);
+      return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : FALLBACK_THUMB;
+    }
+    return resource.thumbnail || FALLBACK_THUMB;
+  }
+
+  // Fisher–Yates shuffle (returns a new array, doesn't mutate the original).
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function buildCard(resource) {
+    const card = document.createElement("div");
+    card.className = "resource-card";
+    card.innerHTML = `
+      <img src="${getThumbnail(resource)}" alt="${resource.title}" loading="lazy">
+      <div class="card-body">
+        <div class="tag">${CATEGORY_LABELS[resource.category] || resource.category}</div>
+        <h3>${resource.title}</h3>
+      </div>
+    `;
+    card.addEventListener("click", () => window.open(resource.url, "_blank", "noopener"));
+    return card;
+  }
+
+  function buildEmptyState(category) {
+    const wrap = document.createElement("div");
+    wrap.className = "empty-state";
+    wrap.innerHTML = `
+      <p class="live">$ query --category=${category} --status</p>
+      <p class="muted"># 0 resources found</p>
+      <p class="muted"># add an entry to the RESOURCES array (top of the script) tagged "${category}" to populate this section</p>
+    `;
+    return wrap;
+  }
+
+  function render(category) {
+    const grid = document.getElementById("resourceGrid");
+    const commandText = document.getElementById("commandText");
+    const resultCount = document.getElementById("resultCount");
+    grid.innerHTML = "";
+
+    let list;
+    if (category === "all") {
+      const count = Math.min(RESOURCES.length, randomInt(20, 30));
+      list = shuffle(RESOURCES).slice(0, count);
+      if (commandText) commandText.textContent = ` filter --category=all --limit=${count} --shuffle`;
+    } else {
+      list = RESOURCES.filter(r => r.category === category);
+      if (commandText) commandText.textContent = ` filter --category=${category} --show=all`;
+    }
+
+    if (list.length === 0) {
+      grid.appendChild(buildEmptyState(category));
+      resultCount.textContent = `# 0 results`;
+      return;
+    }
+
+    list.forEach(r => grid.appendChild(buildCard(r)));
+    resultCount.textContent = `# ${list.length} result${list.length !== 1 ? "s" : ""}`;
+  }
+
+  // Wire up filter buttons.
+  document.querySelectorAll(".filter-pill").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      render(btn.dataset.category);
+    });
+  });
+
+  // Initial render — re-shuffles every time the page loads.
+  render("all");
+</script>
+</body>
+</html>
